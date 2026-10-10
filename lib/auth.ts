@@ -2,7 +2,8 @@ import { cookies } from "next/headers";
 import { randomBytes } from "node:crypto";
 import { database, rows } from "./db";
 import { readSession } from "./security.mjs";
-const localSecret = randomBytes(32).toString("hex");
+const localState = globalThis as typeof globalThis & { orbitSessionSecret?: string };
+const localSecret = (localState.orbitSessionSecret ??= randomBytes(32).toString("hex"));
 export function secret() {
   if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
   if (process.env.NODE_ENV === "production")
