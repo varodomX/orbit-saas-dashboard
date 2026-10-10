@@ -1,0 +1,26 @@
+name: Dashboard checks
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      SESSION_SECRET: ci-only-session-secret-not-for-deployment
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Verify server APIs
+        run: |
+          npm start > /tmp/orbit-server.log 2>&1 &
+          trap 'kill $!' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/session > /dev/null; then break; fi
+            sleep 1
+          done
+          node tests/api-smoke.mjs
