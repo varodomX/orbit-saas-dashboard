@@ -3,13 +3,14 @@ import { cookies } from "next/headers";
 import { database, rows } from "@/lib/db";
 import { currentUser, secret } from "@/lib/auth";
 import { signSession, verifyPassword } from "@/lib/security.mjs";
+import { isAllowedOrigin } from "@/lib/origin.mjs";
 export const runtime = "nodejs";
 const attempts = new Map<string, { count: number; until: number }>();
 export async function GET() {
   return NextResponse.json({ user: await currentUser() });
 }
 export async function POST(request: Request) {
-  if (request.headers.get("origin") !== new URL(request.url).origin)
+  if (!isAllowedOrigin(request))
     return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   let body;
   try {
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
   });
 }
 export async function DELETE(request: Request) {
-  if (request.headers.get("origin") !== new URL(request.url).origin)
+  if (!isAllowedOrigin(request))
     return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   (await cookies()).delete("orbit_session");
   return NextResponse.json({ ok: true });

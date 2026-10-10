@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { database, persist, rows } from "@/lib/db";
 import { hashPassword } from "@/lib/security.mjs";
+import { isAllowedOrigin } from "@/lib/origin.mjs";
 type Context = { params: Promise<{ resource: string }> };
 export const runtime = "nodejs";
 export async function GET(_: Request, context: Context) {
@@ -25,7 +26,7 @@ export async function GET(_: Request, context: Context) {
   return NextResponse.json({ error: "Access denied" }, { status: 403 });
 }
 async function mutate(request: Request, context: Context) {
-  if (request.headers.get("origin") !== new URL(request.url).origin)
+  if (!isAllowedOrigin(request))
     return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   const user = await currentUser();
   if (!user)

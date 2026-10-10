@@ -56,6 +56,8 @@ With the app running, run `node tests/api-smoke.mjs` to verify login, project an
 
 ## Deployment
 
+If a reverse proxy rewrites the request Host, set `APP_ORIGIN=https://your-domain.com` in the environment and restart the server. Localhost, loopback IP, and LAN access are validated against the browser's Host header automatically. Origin protection remains enabled for login, logout, and all data changes.
+
 Deploy on a **single Node.js process with a persistent writable disk**, for example a VPS or a container host with a volume. Set `SESSION_SECRET` and `DATA_DIR`, then run `npm run build` and `npm start` behind HTTPS. This file-backed database is unsuitable for ephemeral serverless filesystems or multiple application replicas. For horizontal scaling, replace the storage layer with PostgreSQL and use a shared rate limiter.
 
 A Dockerfile is included. Build with `docker build -t orbit .`, then run `docker run -p 3000:3000 -v orbit-data:/app/data -e SESSION_SECRET=your-random-secret orbit`. Configure HTTPS at your reverse proxy before signing in to a production deployment. GitHub Actions runs unit tests, a production build, and real API smoke tests on each push.
